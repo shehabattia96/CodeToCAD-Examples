@@ -1,7 +1,5 @@
 from CodeToCAD import *
 
-Scene.default().setDefaultUnit("mm")
-
 
 class BakingPan:
     width = "300mm"
@@ -128,4 +126,6 @@ class BakingPan:
 
 
 if __name__ == "__main__":
+    Scene.default().setDefaultUnit("mm")
+
     BakingPan().create()
