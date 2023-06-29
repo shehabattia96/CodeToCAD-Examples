@@ -14,7 +14,7 @@ class BallBearing:
         self.innerRadius = (outerRadius - shaftRadius -
                             ballRadius - self.grooveDepth) / 2 + shaftRadius
 
-    def create(self) -> CodeToCADInterface.Part:
+    def create(self, isCombinePartsIntoOne=False) -> CodeToCADInterface.Part:
         grooveInnerRadius = self.innerRadius - self.grooveDepth
 
         ballBearingOuterHoleRadius = self.innerRadius + \
@@ -64,7 +64,7 @@ class BallBearing:
 
         ball.circularPattern(9, 360/9, ballBearingInner)
 
-        return ballBearingInner
+        return ballBearingInner if not isCombinePartsIntoOne else ballBearingInner.union(ballBearingOuter).union(ball).rename("ballBearing")
 
 
 if __name__ == "__main__":
