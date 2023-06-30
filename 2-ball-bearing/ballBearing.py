@@ -14,7 +14,12 @@ class BallBearing:
         self.innerRadius = (outerRadius - shaftRadius -
                             ballRadius - self.grooveDepth) / 2 + shaftRadius
 
-    def create(self, isCombinePartsIntoOne=False) -> CodeToCADInterface.Part:
+    # late initialization
+    ballBearingOuter: CodeToCADInterface.Part
+    ballBearingInner: CodeToCADInterface.Part
+    ball: CodeToCADInterface.Part
+
+    def create(self):
         grooveInnerRadius = self.innerRadius - self.grooveDepth
 
         ballBearingOuterHoleRadius = self.innerRadius + \
@@ -22,22 +27,22 @@ class BallBearing:
 
         # MARK: create inner and outer bearing bodies:
 
-        ballBearingOuter = Part("ballBearingOuter").createCylinder(
+        self.ballBearingOuter = Part("ballBearingOuter").createCylinder(
             self.outerRadius,
             self.width
         )
 
-        ballBearingOuter.hole(ballBearingOuter.getLandmark(
+        self.ballBearingOuter.hole(self.ballBearingOuter.getLandmark(
             PresetLandmark.top), ballBearingOuterHoleRadius,
             self.width)
 
-        ballBearingInner = Part("ballBearingInner").createCylinder(
+        self.ballBearingInner = Part("ballBearingInner").createCylinder(
             self.innerRadius,
 
             self.width
         )
 
-        ballBearingInner.hole(ballBearingInner.getLandmark(
+        self.ballBearingInner.hole(self.ballBearingInner.getLandmark(
             PresetLandmark.top), self.shaftRadius,
             self.width)
 
@@ -46,25 +51,39 @@ class BallBearing:
         ballBearingInnerGroove = Part("ballBearingInnerGroove").createTorus(grooveInnerRadius,
                                                                             grooveInnerRadius + self.ballRadius * 2)
 
-        ballBearingInner.subtract(
+        self.ballBearingInner.subtract(
             ballBearingInnerGroove, deleteAfterSubtract=False)
-        ballBearingOuter.subtract(
+        self.ballBearingOuter.subtract(
             ballBearingInnerGroove)
 
         # MARK: create balls
 
-        ball = Part("ball").createSphere(self.ballRadius)
+        self.ball = Part("ball").createSphere(self.ballRadius)
 
-        Joint(ballBearingInner, ball).limitRotationXYZ(0, 0, 0)
-        Joint(ballBearingInner, ballBearingOuter).limitRotationXYZ(
+        Joint(self.ballBearingInner, self.ball).limitRotationXYZ(0, 0, 0)
+        Joint(self.ballBearingInner, self.ballBearingOuter).limitRotationXYZ(
             0, 0, None)
 
-        Joint(ballBearingInner.getLandmark(PresetLandmark.left), ball.getLandmark(
+        Joint(self.ballBearingInner.getLandmark(PresetLandmark.left), self.ball.getLandmark(
             PresetLandmark.right)).limitLocationXYZ(self.grooveDepth, 0, 0)
 
-        ball.circularPattern(9, 360/9, ballBearingInner)
+        self.ball.circularPattern(9, 360/9, self.ballBearingInner)
 
-        return ballBearingInner if not isCombinePartsIntoOne else ballBearingInner.union(ballBearingOuter).union(ball).rename("ballBearing")
+        return self
+
+    def setMaterial(self):
+        # SA: this won't work anymore if combinePartsIntoOne is called.
+
+        ballBearingMaterial = Material("ballBearing").setReflectivity(1.0)
+
+        self.ballBearingOuter.setMaterial(ballBearingMaterial)
+        self.ballBearingInner.setMaterial(ballBearingMaterial)
+        self.ball.setMaterial(ballBearingMaterial)
+
+        return self
+
+    def combinePartsIntoOne(self) -> CodeToCADInterface.Part:
+        return self.ballBearingInner.union(self.ballBearingOuter).union(self.ball).rename("ballBearing")
 
 
 if __name__ == "__main__":
@@ -83,4 +102,4 @@ if __name__ == "__main__":
         outerRadius=outerRadius,
         shaftRadius=shaftRadius,
         ballRadius=ballRadius
-    ).create()
+    ).create().setMaterial()

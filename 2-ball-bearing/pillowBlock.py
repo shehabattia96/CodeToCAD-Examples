@@ -63,9 +63,16 @@ if __name__ == "__main__":
 
     holeRadius = Dimension.fromString("5mm")
     width = Dimension.fromString("3mm")
-    PillowBlock(holeRadius, width).create()
+    pillowBlock = PillowBlock(holeRadius, width).create()
 
     from ballBearing import BallBearing
 
     ballBearing = BallBearing(width - "1mm", holeRadius, Dimension.fromString(
-        "5/2mm"), holeRadius * 0.1).create(isCombinePartsIntoOne=True).rotateX(90)
+        "5/2mm"), holeRadius * 0.1).create().combinePartsIntoOne().rotateX(90)
+
+    blueishMaterial = Material("blueish").setColor(
+        0.0395728, 0.376706, 0.709804, 0.8)
+    pillowBlock.setMaterial(blueishMaterial)
+
+    ballBearingMaterial = Material("ballBearing").setReflectivity(1.0)
+    ballBearing.setMaterial(ballBearingMaterial)
